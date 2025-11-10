@@ -1,5 +1,18 @@
 let students = []
 
+function getCourseInfo(startYear) {
+    const now = new Date();
+    const endYear = startYear + 4;
+    if (now >= new Date(endYear, 8, 1)) {
+        return { years: `${startYear}–${endYear}`, status: 'закончил' };
+    }
+    const course = now.getFullYear() - startYear + (now.getMonth() >= 8 ? 1 : 0);
+    return {
+        years: `${startYear}–${endYear}`,
+        status: `${Math.min(4, Math.max(1, course))} курс`
+    }
+}
+
 function createForm() {
     const form = document.createElement('form')
     const surname = document.createElement('input')
@@ -28,8 +41,10 @@ function createForm() {
     faculty.placeholder = 'Факультет*'
     button.textContent = 'Добавить студента'
 
+    button.type = 'submit'
     brDate.type = 'date'
     startYear.type = 'number'
+    startYear.min = '2000'
 
     form.append(surname)
     form.append(name)
@@ -42,14 +57,14 @@ function createForm() {
 
     document.body.append(form)
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault()
 
         const surnameVal = surname.value.trim()
         const nameVal = name.value.trim()
         const patronomicVal = patronomic.value.trim()
         const brDateVal = brDate.value
-        const startYearVal = parseInt(startYear.value, 10)
+        const startYearVal = Number(startYear.value)
         const facultyVal = faculty.value.trim()
 
         let isValid = true
@@ -64,25 +79,31 @@ function createForm() {
         } else if (!brDateVal) {
             message = 'Укажите дату рождения.'
             isValid = false;
-        }else if (!facultyVal) {
+        } else if (!startYear) {
+            message = 'Укажите год начала обучения'
+            isValid = false;
+        } else if (!facultyVal) {
             message = 'Укажите факультет.';
             isValid = false;
-        }
+        } else if (startYearVal < 2000 || startYearVal > new Date().getFullYear()) {
+                message = `Год должен быть от 2000 до ${new Date().getFullYear()}.`;
+                isValid = false;
+            }
 
         if (!isValid) {
             errorMessage.textContent = message;
             return;
         }
-
-      const student = {
-      surname: surnameVal,
-      name: nameVal,
-      patronomic: patronomicVal,
-      brDate: new Date(brDateVal),
-      startYear: startYearVal,
-      faculty: facultyVal,
-      endYear: startYearVal + 4,
-    };
+        const courseInfo = getCourseInfo(startYearVal);
+        const student = {
+            surname: surnameVal,
+            name: nameVal,
+            patronomic: patronomicVal,
+            brDate: new Date(brDateVal),
+            faculty: facultyVal,
+            studyYears: courseInfo.years,
+            courseStatus: courseInfo.status
+        };
 
         addStudentToArray(student);
         form.reset();
@@ -103,7 +124,7 @@ function createForm() {
 
 function addStudentToArray(student) {
     students.push(student);
-    console.log(student);
+    console.log(students);
 }
 
 createForm()
