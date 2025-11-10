@@ -1,4 +1,4 @@
-let students = []
+let students = JSON.parse(localStorage.getItem('students')) || []
 
 function getCourseInfo(startYear) {
     const now = new Date();
@@ -59,6 +59,23 @@ function createForm() {
     container.id = 'students-container';
     document.body.append(form, container);
 
+
+    function resetErrorStyles() {
+        const inputs = [surname, name, brDate, startYear, faculty];
+        inputs.forEach(input => {
+            input.classList.remove('error');
+        });
+        errorMessage.textContent = '';
+    }
+
+    function errorField(input, hasError) {
+        if (hasError) {
+            input.classList.add('error');
+        } else {
+            input.classList.remove('error');
+        }
+    }
+
     form.addEventListener('submit', function (e) {
         e.preventDefault()
 
@@ -69,51 +86,57 @@ function createForm() {
         const startYearVal = Number(startYear.value)
         const facultyVal = faculty.value.trim()
 
-        let isValid = true
-        let message = ''
+        let errors = [];
+        resetErrorStyles();
 
         if (!surnameVal) {
-            message = 'Укажите фамилию.'
-            isValid = false
-        } else if (!nameVal) {
-            message = 'Укажите имя.'
-            isValid = false;
-        } else if (!brDateVal) {
-            message = 'Укажите дату рождения.'
-            isValid = false;
-        } else if (!startYear) {
-            message = 'Укажите год начала обучения'
-            isValid = false;
-        } else if (!facultyVal) {
-            message = 'Укажите факультет.';
-            isValid = false;
-        } else if (startYearVal < 2000 || startYearVal > new Date().getFullYear()) {
-            message = `Год должен быть от 2000 до ${new Date().getFullYear()}.`;
-            isValid = false;
+            errors.push('Укажите фамилию.');
+            errorField(surname, true);
+        } 
+        if (!nameVal) {
+            errors.push('Укажите имя.');
+            errorField(name, true);
+        } 
+        if (!brDateVal) {
+            errors.push('Укажите дату рождения.');
+            errorField(brDate, true);
         } else {
             const birthDate = new Date(brDateVal);
             if (isNaN(birthDate.getTime())) {
-                message = 'Некорректная дата рождения.';
-                isValid = false;
+                errors.push('Некорректная дата рождения.');
+                errorField(surname, true);
             } else if (birthDate > new Date()) {
-                message = 'Дата рождения не может быть в будущем.';
-                isValid = false;
+                errors.push('Дата рождения не может быть в будущем.');
+                errorField(surname, true);
             } else if (birthDate.getFullYear() < 1900) {
-                message = 'Год рождения должен быть не раньше 1900.';
-                isValid = false;
+                errors.push('Год рождения должен быть не раньше 1900.');
+                errorField(surname, true);
             }
         }
-
-        if (!isValid) {
-            errorMessage.textContent = message;
-            return;
+        if (!startYearVal) {
+            errors.push('Укажите год начала обучения');
+            errorField(startYear, true);
+        } else if (startYearVal < 2000 || startYearVal > new Date().getFullYear()) {
+            errors.push(`Год должен быть от 2000 до ${new Date().getFullYear()}.`);
+            errorField(startYear, true);
+        } 
+        if (!facultyVal) {
+            errors.push('Укажите факультет.');
+            errorField(faculty, true);
         }
+
+            if (errors.length > 0) {
+                errorMessage.innerHTML = errors.map(error =>
+                    `<div class="error-item">• ${error}</div>`
+                ).join('');
+                return;
+            }
         const courseInfo = getCourseInfo(startYearVal);
         const student = {
             surname: surnameVal,
             name: nameVal,
             patronomic: patronomicVal,
-            brDate: new Date(brDateVal),
+            brDate: brDateVal,
             startYear: startYearVal,
             faculty: facultyVal,
             studyYears: courseInfo.years,
@@ -123,8 +146,17 @@ function createForm() {
         addStudentToArray(student);
         form.reset();
         errorMessage.textContent = '';
-
+        resetErrorStyles(); 
     })
+
+    const inputs = [surname, name, patronomic, brDate, startYear, faculty];
+    inputs.forEach(input => {
+        input.addEventListener('input', function () {
+            if (this.classList.contains('error')) {
+                this.classList.remove('error');
+            }
+        });
+    });
 
     return {
         surname,
@@ -138,8 +170,11 @@ function createForm() {
 }
 
 function addStudentToArray(student) {
+
     students.push(student);
+    localStorage.setItem('students', JSON.stringify(students));
     console.log(students);
+
 
     if (typeof renderStudentsTable === 'function') {
         renderStudentsTable();

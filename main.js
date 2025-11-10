@@ -4,6 +4,8 @@ function renderStudentsTable() {
     if (!container) return;
 
     container.innerHTML = '';
+    const students = JSON.parse(localStorage.getItem('students')) || [];
+
 
     const table = document.createElement('table');
     const thead = document.createElement('thead');
@@ -33,9 +35,9 @@ function renderStudentsTable() {
         td2.textContent = student.faculty;
 
         const td3 = document.createElement('td');
-        const birthDate = student.brDate;
+        const birthDate = new Date(student.brDate);
         const birthStr = birthDate.toLocaleDateString('ru-RU');
-        const age = new Date().getFullYear() - birthDate.getFullYear();
+        const age = calculateAge(birthDate)
         td3.textContent = `${birthStr} (${age} лет)`;
 
         const td4 = document.createElement('td');
@@ -48,3 +50,19 @@ function renderStudentsTable() {
     table.append(tbody);
     container.append(table);
 }
+
+function calculateAge(birthDate) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderStudentsTable();
+});
