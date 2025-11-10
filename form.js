@@ -53,9 +53,11 @@ function createForm() {
     form.append(startYear)
     form.append(faculty)
     form.append(button)
-    form.append(errorMessage)
+    form.insertBefore(errorMessage, button)
 
-    document.body.append(form)
+    const container = document.createElement('div');
+    container.id = 'students-container';
+    document.body.append(form, container);
 
     form.addEventListener('submit', function (e) {
         e.preventDefault()
@@ -86,9 +88,21 @@ function createForm() {
             message = 'Укажите факультет.';
             isValid = false;
         } else if (startYearVal < 2000 || startYearVal > new Date().getFullYear()) {
-                message = `Год должен быть от 2000 до ${new Date().getFullYear()}.`;
+            message = `Год должен быть от 2000 до ${new Date().getFullYear()}.`;
+            isValid = false;
+        } else {
+            const birthDate = new Date(brDateVal);
+            if (isNaN(birthDate.getTime())) {
+                message = 'Некорректная дата рождения.';
+                isValid = false;
+            } else if (birthDate > new Date()) {
+                message = 'Дата рождения не может быть в будущем.';
+                isValid = false;
+            } else if (birthDate.getFullYear() < 1900) {
+                message = 'Год рождения должен быть не раньше 1900.';
                 isValid = false;
             }
+        }
 
         if (!isValid) {
             errorMessage.textContent = message;
@@ -100,6 +114,7 @@ function createForm() {
             name: nameVal,
             patronomic: patronomicVal,
             brDate: new Date(brDateVal),
+            startYear: startYearVal,
             faculty: facultyVal,
             studyYears: courseInfo.years,
             courseStatus: courseInfo.status
@@ -125,6 +140,10 @@ function createForm() {
 function addStudentToArray(student) {
     students.push(student);
     console.log(students);
+
+    if (typeof renderStudentsTable === 'function') {
+        renderStudentsTable();
+    }
 }
 
 createForm()
