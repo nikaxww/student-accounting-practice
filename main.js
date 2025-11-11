@@ -1,3 +1,7 @@
+let sortConfig = {
+    key: 'fio',
+    order: 'asc'
+};
 
 
 function applyFilters(students) {
@@ -46,6 +50,46 @@ function createFilters() {
     container.before(filtersWrapper);
 }
 
+function sortStudents(students, key, order = 'asc') {
+     return students.sort((a, b) => {
+        let valA, valB;
+
+        switch (key) {
+            case 'fio':
+                valA = `${a.surname} ${a.name} ${a.patronomic || ''}`.toLowerCase();
+                valB = `${b.surname} ${b.name} ${b.patronomic || ''}`.toLowerCase();
+                break;
+
+            case 'faculty':
+                valA = (a.faculty || '').toLowerCase();
+                valB = (b.faculty || '').toLowerCase();
+                break;
+
+            case 'birthDate':
+                valA = new Date(a.brDate).getTime();
+                valB = new Date(b.brDate).getTime();
+                break;
+
+            case 'studyYears':
+                valA = Number(a.startYear) || 0;
+                valB = Number(b.startYear) || 0;
+                break;
+
+            default:
+                valA = '';
+                valB = '';
+        }
+
+        let cmp = 0;
+        if (valA < valB) cmp = -1;
+        else if (valA > valB) cmp = 1;
+
+        return order === 'desc' ? -cmp : cmp;
+    });
+}
+
+
+
 function renderStudentsTable() {
 
     const container = document.getElementById('students-container');
@@ -54,7 +98,9 @@ function renderStudentsTable() {
 
     let students = JSON.parse(localStorage.getItem('students')) || [];
     container.innerHTML = '';
+
     students = applyFilters(students);
+    students = sortStudents(students, sortConfig.key, sortConfig.order);
 
     const table = document.createElement('table');
     const thead = document.createElement('thead');
@@ -62,10 +108,35 @@ function renderStudentsTable() {
 
     table.classList.add('students-table');
 
+    const headers = [
+        { text: 'ФИО', key: 'fio' },
+        { text: 'Факультет', key: 'faculty' },
+        { text: 'Дата рождения и возраст', key: 'birthDate' },
+        { text: 'Годы обучения', key: 'studyYears' }
+    ];
+
     const headerRow = document.createElement('tr');
-    ['ФИО', 'Факультет', 'Дата рождения и возраст', 'Годы обучения'].forEach(text => {
+
+    headers.forEach(header => {
         const th = document.createElement('th');
-        th.textContent = text;
+        th.textContent = header.text;
+        th.style.cursor = 'pointer';
+        th.dataset.sortKey = header.key;
+
+        if (sortConfig.key === header.key) {
+            const arrow = sortConfig.order === 'asc' ? ' ⇑' : ' ⇓';
+            th.textContent += arrow;
+        }
+
+        th.addEventListener('click', () => {
+            if (sortConfig.key === header.key) {
+                sortConfig.order = sortConfig.order === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = header.key;
+                sortConfig.order = 'asc';
+            }
+            renderStudentsTable();
+        });
         headerRow.append(th);
     });
     thead.append(headerRow);
