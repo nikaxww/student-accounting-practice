@@ -104,13 +104,13 @@ function createForm() {
             const birthDate = new Date(brDateVal);
             if (isNaN(birthDate.getTime())) {
                 errors.push('Некорректная дата рождения.');
-                errorField(surname, true);
+                errorField(brDate, true);
             } else if (birthDate > new Date()) {
                 errors.push('Дата рождения не может быть в будущем.');
-                errorField(surname, true);
+                errorField(brDate, true);
             } else if (birthDate.getFullYear() < 1900) {
                 errors.push('Год рождения должен быть не раньше 1900.');
-                errorField(surname, true);
+                errorField(brDate, true);
             }
         }
         if (!startYearVal) {
