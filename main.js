@@ -1,11 +1,60 @@
+
+
+function applyFilters(students) {
+    const fio = document.getElementById('filter-fio')?.value.trim().toLowerCase() || '';
+    const faculty = document.getElementById('filter-faculty')?.value.trim().toLowerCase() || '';
+    const startY = document.getElementById('filter-startYear')?.value;
+    const endY = document.getElementById('filter-endYear')?.value;
+
+    return students.filter(s => {
+        const fullName = `${s.surname} ${s.name} ${s.patronomic || ''}`.toLowerCase();
+        const matchFio = !fio || fullName.includes(fio);
+        const matchFaculty = !faculty || s.faculty.toLowerCase().includes(faculty);
+        const matchStart = !startY || Number(s.startYear) === Number(startY);
+        const matchEnd = !endY || (Number(s.startYear) + 4) === Number(endY);
+        return matchFio && matchFaculty && matchStart && matchEnd;
+    });
+}
+
+function createFilters() {
+    const container = document.getElementById('students-container');
+    if (!container) return;
+
+
+    const filtersWrapper = document.createElement('div');
+    filtersWrapper.classList.add('filters');
+
+    const fields = [
+        { id: 'filter-fio', placeholder: 'ФИО', type: 'text' },
+        { id: 'filter-faculty', placeholder: 'Факультет', type: 'text' },
+        { id: 'filter-startYear', placeholder: 'Год начала', type: 'number' },
+        { id: 'filter-endYear', placeholder: 'Год окончания', type: 'number' }
+    ];
+
+    fields.forEach(field => {
+        const input = document.createElement('input');
+        input.id = field.id;
+        input.type = field.type;
+        input.placeholder = field.placeholder;
+        input.classList.add('filter-input');
+
+        input.addEventListener('input', () => renderStudentsTable());
+
+        filtersWrapper.append(input);
+    });
+
+    container.before(filtersWrapper);
+}
+
 function renderStudentsTable() {
 
     const container = document.getElementById('students-container');
     if (!container) return;
 
-    container.innerHTML = '';
-    const students = JSON.parse(localStorage.getItem('students')) || [];
 
+    let students = JSON.parse(localStorage.getItem('students')) || [];
+    container.innerHTML = '';
+    students = applyFilters(students);
 
     const table = document.createElement('table');
     const thead = document.createElement('thead');
@@ -14,7 +63,7 @@ function renderStudentsTable() {
     table.classList.add('students-table');
 
     const headerRow = document.createElement('tr');
-    ['ФИО', 'Факультет', 'ДР и возраст', 'Годы обучения'].forEach(text => {
+    ['ФИО', 'Факультет', 'Дата рождения и возраст', 'Годы обучения'].forEach(text => {
         const th = document.createElement('th');
         th.textContent = text;
         headerRow.append(th);
@@ -55,14 +104,15 @@ function calculateAge(birthDate) {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
     }
-    
+
     return age;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    createFilters();
     renderStudentsTable();
 });
